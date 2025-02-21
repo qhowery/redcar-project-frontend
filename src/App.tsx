@@ -25,7 +25,7 @@ const App: React.FC = () => {
     const fetchUser = async () => {
       if (token) {
         try {
-          const response = await fetch('$(API_URL)/auth/me', {
+          const response = await fetch(`$(API_URL)/auth/me`, {
             method: 'GET',
             headers: { Authorization: `Bearer ${token}` },
           });
@@ -110,7 +110,7 @@ const App: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await fetch('/auth/logout', { method: 'POST' });
+      await fetch(`${API_URL}/auth/logout`, { method: 'POST' });
     } catch (err) {
       console.error('Logout failed:', err);
     }
