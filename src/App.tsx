@@ -19,7 +19,7 @@ const App: React.FC = () => {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [error, setError] = useState<string>('');
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3000';
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -47,7 +47,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (token) {
-      const newSocket = io(API_BASE, {
+      const newSocket = io(API_URL, {
         auth: { token },
         transports: ['websocket'],
       });
@@ -68,7 +68,7 @@ const App: React.FC = () => {
 
   const handleLogin = async (username: string, password: string) => {
     try {
-      const response = await fetch(`${API_BASE}/auth/login`, {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -91,7 +91,7 @@ const App: React.FC = () => {
 
   const handleRegister = async (username: string, password: string) => {
     try {
-      const response = await fetch(`${API_BASE}/auth/register`, {
+      const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -128,7 +128,7 @@ const App: React.FC = () => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
   
-      const response = await fetch(`${API_BASE}/ask`, {
+      const response = await fetch(`${API_URL}/ask`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -173,7 +173,7 @@ const App: React.FC = () => {
 
   const fetchLatestMessage = async () => {
     try {
-      const response = await fetch(`${API_BASE}/latest-message`, {
+      const response = await fetch(`${API_URL}/latest-message`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
