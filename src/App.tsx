@@ -10,7 +10,6 @@ interface HistoryItem {
   answer: string;
 }
 
-
 const App: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('access_token'));
