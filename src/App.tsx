@@ -25,7 +25,7 @@ const App: React.FC = () => {
     const fetchUser = async () => {
       if (token) {
         try {
-          const response = await fetch('${API_URL}/auth/me', {
+          const response = await fetch('/auth/me', {
             method: 'GET',
             headers: { Authorization: `Bearer ${token}` },
           });
