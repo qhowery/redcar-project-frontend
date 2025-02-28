@@ -21,6 +21,7 @@ const App: React.FC = () => {
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
+  // Profile endpoint
   useEffect(() => {
     const fetchUser = async () => {
       if (token) {
@@ -29,15 +30,18 @@ const App: React.FC = () => {
             method: 'GET',
             headers: { Authorization: `Bearer ${token}` },
           });
-  
+
           if (!response.ok) throw new Error('Session expired');
-  
+
           const userData = await response.json();
           setUser(userData);
+          // Load user's history from backend
+          setHistory(userData.history || []);
         } catch (err) {
           console.error('Session check failed:', err);
           localStorage.removeItem('access_token');
           setToken(null);
+          setHistory([]); // Clear history on session failure
         }
       }
     };
@@ -66,6 +70,7 @@ const App: React.FC = () => {
     }
   }, [token]);
 
+  // Login endpoint
   const handleLogin = async (username: string, password: string) => {
     try {
       const response = await fetch(`${API_URL}/auth/login`, {
@@ -89,6 +94,7 @@ const App: React.FC = () => {
     }
   };
 
+  // Registration endpoint
   const handleRegister = async (username: string, password: string) => {
     try {
       const response = await fetch(`${API_URL}/auth/register`, {
@@ -117,6 +123,8 @@ const App: React.FC = () => {
     localStorage.removeItem('access_token');
     setUser(null);
     setToken(null);
+    setHistory([]); // Clear history on logout
+    setStreamMessages([]);
   };
 
   const handleQuestionSubmit = async (question: string) => {
@@ -124,10 +132,21 @@ const App: React.FC = () => {
       setError('');
       setResult('');
       setStreamMessages([]);
+      let answer = '';
   
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      // Clear previous stream messages
+      setStreamMessages(['Processing your question...']);
   
+      // Listen for WebSocket messages
+      socket.on('serverMessage', (message: string) => {
+        if (message === 'Processing your question...') return;
+        
+        setStreamMessages(prev => [...prev, message]);
+        answer += message;
+        setResult(answer); // Update latest answer continuously
+      });
+  
+      // Send question to backend
       const response = await fetch(`${API_URL}/ask`, {
         method: 'POST',
         headers: {
@@ -135,37 +154,19 @@ const App: React.FC = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ question }),
-        signal: controller.signal,
       });
-  
-      clearTimeout(timeoutId);
   
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
   
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let answer = '';
-  
-      while (true) {
-        const { done, value } = await reader!.read();
-        if (done) break;
-        const chunk = decoder.decode(value);
-        setStreamMessages(prev => [...prev, chunk]);
-        answer += chunk;
-      }
-  
-      setResult(answer);
+      // Finalize history entry
       setHistory(prev => [...prev, { question, answer }]);
-
-      // Clear the stream messages immediately after the response is fully processed
-      setStreamMessages([]);
   
     } catch (err: any) {
       console.error('Error:', err);
-      setError(err.name === 'AbortError'
+      setError(err.name === 'AbortError' 
         ? 'Request timed out'
         : err.message || 'Failed to get answer');
     }
