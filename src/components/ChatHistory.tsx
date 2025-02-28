@@ -8,7 +8,6 @@ interface ChatHistoryProps {
 const ChatHistory: React.FC<ChatHistoryProps> = ({ history }) => {
   return (
     <div>
-      <h2>Chat History</h2>
       {history.map((item, index) => (
         <div key={index}>
           <p><strong>Q:</strong> {item.question}</p>
